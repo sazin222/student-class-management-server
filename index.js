@@ -29,6 +29,7 @@ async function run() {
     // await client.connect();
 
     const StudentsCollection= client.db('CreativeDB').collection('students')
+    const teacherRequestCollection= client.db('CreativeDB').collection('request')
  
   
     app.post('/students', async(req,res)=>{
@@ -37,6 +38,20 @@ async function run() {
         res.send(result)
     
       })  
+      // teacher request post
+    app.post('/teacher/request', async(req,res)=>{
+        const user= req.body 
+        const result = await teacherRequestCollection.insertOne(user)
+        res.send(result)
+    
+      })  
+     
+      // get the all users students role
+      app.get('/students/:email', async (req, res) => {
+        const email = req.params.email
+        const result = await StudentsCollection.findOne({ email })
+        res.send(result)
+      })
 
 
 
