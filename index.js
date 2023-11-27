@@ -127,6 +127,14 @@ async function run() {
   res.send(result)
 })
 
+// delete data from the classCollection 
+app.delete('/class/deleted/:id', async(req,res)=>{
+  const id= req.params.id
+  const query= {_id: new ObjectId(id)} 
+  const result = classesCollection.deleteOne(query)
+  res.send(result)
+})
+
 
 
     // Send a ping to confirm a successful connection
