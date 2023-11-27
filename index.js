@@ -1,7 +1,7 @@
 const express= require('express');
 const app= express()
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const port = process.env.PORT || 5000 
 
@@ -45,13 +45,47 @@ async function run() {
         res.send(result)
     
       })  
-     
+   
+      // get the all requested user for teacher
+      app.get('/requestTeacher', async(req, res)=>{
+        const result = await teacherRequestCollection.find().toArray()
+        res.send(result)
+      })
+      // all students users get data
+      app.get('/users', async(req, res)=>{
+        const result = await StudentsCollection.find().toArray()
+        res.send(result)
+      })
       // get the all users students role
       app.get('/students/:email', async (req, res) => {
         const email = req.params.email
         const result = await StudentsCollection.findOne({ email })
         res.send(result)
       })
+
+      // update the role in students users collection
+  app.patch('/students/:email', async(req,res)=>{
+    const email= req.params.email
+    const filter={email: email}
+    const updatedDoc ={
+     $set:{
+       role: 'teacher'
+     }
+    }
+    const result= await StudentsCollection.updateOne(filter, updatedDoc)
+    res.send(result)
+ })
+  app.patch('/requestTeacher/:id', async(req,res)=>{
+    const id= req.params.id
+    const filter={_id: new ObjectId(id)}
+    const updatedDoc ={
+     $set:{
+       status: 'accepted'
+     }
+    }
+    const result= await teacherRequestCollection.updateOne(filter, updatedDoc)
+    res.send(result)
+ })
 
 
 
