@@ -30,6 +30,7 @@ async function run() {
 
     const StudentsCollection= client.db('CreativeDB').collection('students')
     const teacherRequestCollection= client.db('CreativeDB').collection('request')
+    const classesCollection= client.db('CreativeDB').collection('classes')
  
   
     app.post('/students', async(req,res)=>{
@@ -45,6 +46,12 @@ async function run() {
         res.send(result)
     
       })  
+
+      app.post('/classes',  async(req,res)=>{
+        const item= req.body
+        const result= await classesCollection.insertOne(item)
+        res.send(result)
+      })
    
       // get the all requested user for teacher
       app.get('/requestTeacher', async(req, res)=>{
@@ -56,6 +63,22 @@ async function run() {
         const result = await StudentsCollection.find().toArray()
         res.send(result)
       })
+
+      // get the all classes data
+      app.get('/classes', async(req, res)=>{
+        const result = await classesCollection.find().toArray()
+        res.send(result)
+      })
+      // get  classes data by id
+      app.get('/class/:id', async (req, res) => {
+        const id = req.params.id
+        const query = {_id: new ObjectId(id)}
+        const result= await classesCollection.findOne(query)
+        console.log(result);
+        res.send(result)
+        
+      })
+
       // get the all users students role
       app.get('/students/:email', async (req, res) => {
         const email = req.params.email
@@ -86,6 +109,23 @@ async function run() {
     const result= await teacherRequestCollection.updateOne(filter, updatedDoc)
     res.send(result)
  })
+// update the class from classes collection
+ app.patch('/class/update/:id', async(req, res)=>{
+  const item = req.body 
+  console.log(item);
+  const id= req.params.id 
+  const filter= {_id: new ObjectId(id)}
+  const updatedDoc= {
+    $set:{
+      title:item.title,
+      price:item.price,
+      description: item.description,
+      image:item.image
+    }
+  }
+  const result = await classesCollection.updateOne(filter, updatedDoc)
+  res.send(result)
+})
 
 
 
