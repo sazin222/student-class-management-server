@@ -113,6 +113,17 @@ async function run() {
         res.send(result)
       })
 
+      app.get('/enrollClass/:email', async (req, res) => {
+        const email = req.params.email
+        const result = await paymentCollection.find({ email}).toArray()
+        res.send(result)
+      })
+
+      app.get('/enroll', async(req, res)=>{
+        const result = await paymentCollection.find().toArray()
+        res.send(result)
+      })
+
       // update the role in students users collection
   app.patch('/students/:email', async(req,res)=>{
     const email= req.params.email
@@ -160,6 +171,17 @@ app.patch('/classes/:id', async(req,res)=>{
   const updatedDoc ={
    $set:{
      status: 'approved'
+   }
+  }
+  const result= await classesCollection.updateOne(filter, updatedDoc)
+  res.send(result)
+})
+app.patch('/classes/rejected/:id', async(req,res)=>{
+  const id= req.params.id
+  const filter={_id: new ObjectId(id)}
+  const updatedDoc ={
+   $set:{
+     status: 'rejected'
    }
   }
   const result= await classesCollection.updateOne(filter, updatedDoc)
