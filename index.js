@@ -3,6 +3,7 @@ const app= express()
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 const port = process.env.PORT || 5000 
 
 
@@ -31,8 +32,34 @@ async function run() {
     const StudentsCollection= client.db('CreativeDB').collection('students')
     const teacherRequestCollection= client.db('CreativeDB').collection('request')
     const classesCollection= client.db('CreativeDB').collection('classes')
+    const paymentCollection= client.db('CreativeDB').collection('payment')
  
-  
+   
+  // payment intent
+  app.post('/create-payment-intent', async (req,res)=>{
+    const {price} = req.body 
+    const amount = parseInt(price *100);
+    console.log(amount,'amount inside the intent');
+
+  const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount,
+      currency: 'usd',
+      payment_method_types: [
+        "card"
+      ],
+    })
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+
+  })
+
+  app.post('/payment', async(req,res)=>{
+    const payment= req.body 
+    const paymentResult = await paymentCollection.insertOne(payment)
+    res.send(paymentResult)
+  })
+
     app.post('/students', async(req,res)=>{
         const user= req.body 
         const result = await StudentsCollection.insertOne(user)
@@ -127,6 +154,17 @@ async function run() {
   res.send(result)
 })
 
+app.patch('/classes/:id', async(req,res)=>{
+  const id= req.params.id
+  const filter={_id: new ObjectId(id)}
+  const updatedDoc ={
+   $set:{
+     status: 'approved'
+   }
+  }
+  const result= await classesCollection.updateOne(filter, updatedDoc)
+  res.send(result)
+})
 // delete data from the classCollection 
 app.delete('/class/deleted/:id', async(req,res)=>{
   const id= req.params.id
@@ -134,7 +172,6 @@ app.delete('/class/deleted/:id', async(req,res)=>{
   const result = classesCollection.deleteOne(query)
   res.send(result)
 })
-
 
 
     // Send a ping to confirm a successful connection
