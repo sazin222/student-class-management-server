@@ -34,6 +34,7 @@ async function run() {
     const teacherRequestCollection= client.db('CreativeDB').collection('request')
     const classesCollection= client.db('CreativeDB').collection('classes')
     const paymentCollection= client.db('CreativeDB').collection('payment')
+    const feedbackCollection= client.db('CreativeDB').collection('feedBack')
   
 
     // jwt 
@@ -102,7 +103,7 @@ async function run() {
 
   })
 
-  app.post('/payment', async(req,res)=>{
+  app.post('/payment',  async(req,res)=>{
     const payment= req.body 
     const paymentResult = await paymentCollection.insertOne(payment)
     res.send(paymentResult)
@@ -115,7 +116,7 @@ async function run() {
     
       })  
       // teacher request post
-    app.post('/teacher/request', async(req,res)=>{
+    app.post('/teacher/request',  async(req,res)=>{
         const user= req.body 
         const result = await teacherRequestCollection.insertOne(user)
         res.send(result)
@@ -127,14 +128,20 @@ async function run() {
         const result= await classesCollection.insertOne(item)
         res.send(result)
       })
+      // feedback
+      app.post('/feedback',  async(req,res)=>{
+        const feedback= req.body 
+        const feedbackResult = await feedbackCollection.insertOne(feedback)
+        res.send(feedbackResult)
+      })
    
       // get the all requested user for teacher
-      app.get('/requestTeacher', async(req, res)=>{
+      app.get('/requestTeacher',  async(req, res)=>{
         const result = await teacherRequestCollection.find().toArray()
         res.send(result)
       })
       // all students users get data
-      app.get('/users', async(req, res)=>{
+      app.get('/users',  async(req, res)=>{
         const result = await StudentsCollection.find().toArray()
         res.send(result)
       })
@@ -144,8 +151,12 @@ async function run() {
         const result = await classesCollection.find().toArray()
         res.send(result)
       })
+      app.get('/reviews', async(req, res)=>{
+        const result = await feedbackCollection.find().toArray()
+        res.send(result)
+      })
       // get  classes data by id
-      app.get('/class/:id', async (req, res) => {
+      app.get('/class/:id',  async (req, res) => {
         const id = req.params.id
         const query = {_id: new ObjectId(id)}
         const result= await classesCollection.findOne(query)
@@ -153,21 +164,30 @@ async function run() {
         res.send(result)
         
       })
+      app.get('/payment/classes/:id',  async (req, res) => {
+        const id = req.params.id
+      
+        const query = {_id: new ObjectId(id) }
+        const result= await paymentCollection.findOne(query)
+        console.log(result);
+        res.send(result)
+        
+      })
 
       // get the all users students role
-      app.get('/students/:email', async (req, res) => {
+      app.get('/students/:email',  async (req, res) => {
         const email = req.params.email
         const result = await StudentsCollection.findOne({ email })
         res.send(result)
       })
 
-      app.get('/enrollClass/:email', async (req, res) => {
+      app.get('/enrollClass/:email',async (req, res) => {
         const email = req.params.email
         const result = await paymentCollection.find({ email}).toArray()
         res.send(result)
       })
 
-      app.get('/enroll', async(req, res)=>{
+      app.get('/enroll',  async(req, res)=>{
         const result = await paymentCollection.find().toArray()
         res.send(result)
       })
@@ -236,7 +256,7 @@ app.patch('/classes/rejected/:id', async(req,res)=>{
   res.send(result)
 })
 // delete data from the classCollection 
-app.delete('/class/deleted/:id', async(req,res)=>{
+app.delete('/class/deleted/:id', verifyToken, verifyAdmin, async(req,res)=>{
   const id= req.params.id
   const query= {_id: new ObjectId(id)} 
   const result = classesCollection.deleteOne(query)
