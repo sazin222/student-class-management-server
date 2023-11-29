@@ -1,6 +1,7 @@
 const express= require('express');
 const app= express()
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
@@ -33,7 +34,54 @@ async function run() {
     const teacherRequestCollection= client.db('CreativeDB').collection('request')
     const classesCollection= client.db('CreativeDB').collection('classes')
     const paymentCollection= client.db('CreativeDB').collection('payment')
+  
+
+    // jwt 
+    app.post('/jwt', async(req,res)=>{
+      const user = req.body 
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
+      res.send({token})
+    })
+
+    const verifyToken = (req, res, next)=>{
+      console.log('inside verify token',
+      req.headers.authorization);
+      if(!req.headers.authorization){
+       return res.status(401).send({message:'unauthorized access'})
+      } 
+      const token = req.headers.authorization.split(' ')[1]
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err,decoded)=>{
+        if(err){
+          return res.status(401).send({message:'unauthorized access'})
+        }
+        req.decoded= decoded
+
+        next()
+      })
+    } 
+
+    const verifyAdmin = async(req,res, next)=>{
+      const email= req.decoded.email
+      const query= {email: email} 
+      const user = await StudentsCollection.findOne(query)
+      const isAdmin = user?.role === 'admin'
+      if(!isAdmin){
+        return res.status(401).send({message:'forbidden access'})
+      }
+      next()
+    }
  
+    const verifyTeacher = async(req,res, next)=>{
+      const email= req.decoded.email
+      const query= {email: email} 
+      const user = await StudentsCollection.findOne(query)
+      const isTeacher = user?.role === 'teacher'
+      if(!isTeacher){
+        return res.status(401).send({message:'forbidden access'})
+      }
+      next()
+    }
+
    
   // payment intent
   app.post('/create-payment-intent', async (req,res)=>{
