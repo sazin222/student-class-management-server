@@ -164,6 +164,13 @@ async function run() {
         res.send(result)
         
       })
+      app.get('/single/class/:email',  async (req, res) => {
+        const email = req.params.email
+        const result = await classesCollection.find({ email }).toArray()
+
+        res.send(result)
+        
+      })
       app.get('/payment/classes/:id',  async (req, res) => {
         const id = req.params.id
       
@@ -230,6 +237,7 @@ async function run() {
     }
   }
   const result = await classesCollection.updateOne(filter, updatedDoc)
+  console.log(result);
   res.send(result)
 })
 
